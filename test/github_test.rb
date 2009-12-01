@@ -1,0 +1,40 @@
+require 'test/unit'
+require File.dirname(__FILE__) + '/../lib/net/github-upload'
+
+class GitHubUploadTest < Test::Unit::TestCase
+	def setup
+		login = `git config github.user`.chomp
+		token = `git config github.token`.chomp
+		@gh = Net::GitHub::Upload.new(
+			:login => login,
+			:token => token
+		)
+		@repos = 'taberareloo'
+	end
+
+	def test_file_upload
+		direct_link = nil
+		assert_nothing_raised {
+			direct_link = @gh.upload(
+				:repos => @repos,
+				:file  => 'test/test',
+				:description => "test file"
+			)
+		}
+		assert_instance_of String, direct_link
+	end
+
+	def test_content_upload
+		direct_link = nil
+		assert_nothing_raised {
+			direct_link = @gh.upload(
+				:repos => @repos,
+				:data  => 'test',
+				:name  => "test_#{Time.now.to_i}.txt",
+				:content_type => 'text/plain',
+				:description => "test file2"
+			)
+		}
+		assert_instance_of String, direct_link
+	end
+end
