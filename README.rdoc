@@ -1,13 +1,14 @@
 = Ruby Net::GitHub::Upload
 
 * http://github.com/Constellation/ruby-net-github-upload
+* http://gemcutter.org/gems/net-github-upload
 
-== DESCRIPTION:
+== DESCRIPTION
 
+Ruby Net::GitHub::Upload is upload user agent for GitHub Downloads
 respect to http://github.com/typester/net-github-upload-perl
-ruby porting
 
-== SYNOPSIS:
+== SYNOPSIS
 
   # require
   require 'rubygems'
@@ -42,12 +43,18 @@ ruby porting
     :description => "test file2"
   )
 
-== INSTALL:
+== DEPENDENCY
+
+* nokogiri
+* faster_xml_simple
+* httpclient
+
+== INSTALL
 
   gem source -a http://gemcutter.org
   sudo gem install net-github-upload
 
-== LICENSE:
+== LICENSE
 
 Ruby Net::Github::Upload
 (The MIT License)
