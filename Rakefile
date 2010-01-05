@@ -49,7 +49,7 @@ spec = Gem::Specification.new do |s|
   s.rubyforge_project = $rubyforge_project
   s.require_path = 'lib'
   s.test_files = Dir["test/*_test.rb"]
-  s.add_dependency('nokogiri')
+  s.add_dependency('nokogiri', '>=1.4.0')
   s.add_dependency('faster_xml_simple')
   s.add_dependency('httpclient')
   s.files = %w(README.rdoc Rakefile) + Dir["{bin,test,lib}/**/*"]

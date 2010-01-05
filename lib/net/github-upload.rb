@@ -6,7 +6,7 @@ require 'faster_xml_simple'
 module Net
   module GitHub
     class Upload
-      VERSION = '0.0.1'
+      VERSION = '0.0.2'
       def initialize params=nil
         @login = params[:login]
         @token = params[:token]
@@ -82,7 +82,6 @@ module Net
         if stat.code == 201
           return FasterXmlSimple.xml_in(stat.content)['PostResponse']['Location']
         else
-          pp stat.content
           raise 'Failed to upload'
         end
       end
