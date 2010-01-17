@@ -22,15 +22,38 @@ class GitHubUploadTest < Test::Unit::TestCase
 			)
 		}
 		assert_instance_of String, direct_link
+
+		# replace method : thx id:rngtng
+		assert_nothing_raised {
+			direct_link = @gh.replace(
+				:repos => @repos,
+				:file  => 'test/test',
+				:description => "test file"
+			)
+		}
+		assert_instance_of String, direct_link
 	end
 
 	def test_content_upload
 		direct_link = nil
+		time = Time.now.to_i
 		assert_nothing_raised {
 			direct_link = @gh.upload(
 				:repos => @repos,
 				:data  => 'test',
-				:name  => "test_#{Time.now.to_i}.txt",
+				:name  => "test_#{time}.txt",
+				:content_type => 'text/plain',
+				:description => "test file2"
+			)
+		}
+		assert_instance_of String, direct_link
+
+		# replace method : thx id:rngtng
+		assert_nothing_raised {
+			direct_link = @gh.replace(
+				:repos => @repos,
+				:data  => 'test',
+				:name  => "test_#{time}.txt",
 				:content_type => 'text/plain',
 				:description => "test file2"
 			)
