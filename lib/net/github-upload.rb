@@ -34,13 +34,13 @@ module Net
         end
 
         if info[:replace]
-          list_files(info[:repos]).each { |obj| 
+          list_files(info[:repos]).each { |obj|
             next unless obj[:name] == info[:name]
             HTTPClient.post("http://github.com/#{info[:repos]}/downloads/#{obj[:id].gsub( "download_", '')}", {
               "_method"      => "delete",
               "login"        => @login,
               "token"        => @token
-            })          
+            })
           }
         elsif list_files(info[:repos]).any?{|obj| obj[:name] == info[:name]}
           raise "file '#{info[:name]}' is already uploaded. please try different name"
@@ -98,7 +98,7 @@ module Net
       def replace info
          upload info.merge( :replace => true )
       end
-      
+
       private
       def list_files repos
         raise "required repository name" unless repos
