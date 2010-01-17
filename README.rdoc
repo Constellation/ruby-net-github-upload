@@ -35,10 +35,26 @@ respect to http://github.com/typester/net-github-upload-perl
   
   # data upload
   # you can define content_type => Amazon S3 Content-Type
+  time = Time.now.to_i
   direct_link = gh.upload(
     :repos => repos,
     :data  => 'test',
-    :name  => "test_#{Time.now.to_i}.txt",
+    :name  => "test_#{time}.txt",
+    :content_type => 'text/plain',
+    :description => "test file2"
+  )
+  
+  # replace file or data
+  # thx id:rngtng !
+  direct_link = gh.replace(
+    :repos => repos,
+    :file  => 'test/test',
+    :description => "test file"
+  )
+  direct_link = gh.replace(
+    :repos => repos,
+    :data  => 'test',
+    :name  => "test_#{time}.txt",
     :content_type => 'text/plain',
     :description => "test file2"
   )
