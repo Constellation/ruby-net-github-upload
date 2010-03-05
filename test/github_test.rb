@@ -9,7 +9,7 @@ class GitHubUploadTest < Test::Unit::TestCase
 			:login => login,
 			:token => token
 		)
-		@repos = 'taberareloo'
+		@repos = 'ruby-net-github-upload'
 	end
 
 	def test_file_upload
