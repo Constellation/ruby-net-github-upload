@@ -10,6 +10,10 @@ module Net
       def initialize params=nil
         @login = params[:login]
         @token = params[:token]
+
+        if @login.empty? or @token.empty?
+          raise "login or token is empty"
+        end
       end
 
       def upload info
@@ -91,7 +95,7 @@ module Net
         if stat.code == 201
           return FasterXmlSimple.xml_in(stat.content)['PostResponse']['Location']
         else
-          raise 'Failed to upload'
+          raise 'Failed to upload' + extract_error_message(stat)
         end
       end
 
@@ -100,6 +104,17 @@ module Net
       end
 
       private
+
+
+      def extract_error_message(stat)
+        # @see http://docs.amazonwebservices.com/AmazonS3/2006-03-01/ErrorResponses.html
+        error = FasterXmlSimple.xml_in(stat.content)['Error']
+        " due to #{error['Code']} (#{error['Message']})"
+      rescue
+        ''
+      end
+
+
       def list_files repos
         raise "required repository name" unless repos
         res = HTTPClient.get_content("http://github.com/#{repos}/downloads", {
