@@ -6,7 +6,7 @@ require 'faster_xml_simple'
 module Net
   module GitHub
     class Upload
-      VERSION = '0.0.3'
+      VERSION = '0.0.4'
       def initialize params=nil
         @login = params[:login]
         @token = params[:token]
@@ -50,9 +50,10 @@ module Net
           raise "file '#{info[:name]}' is already uploaded. please try different name"
         end
 
+        info[:content_type] ||= 'application/octet-stream'
         stat = HTTPClient.post("http://github.com/#{info[:repos]}/downloads", {
           "file_size"    => info[:file] ? File.stat(info[:file]).size : info[:data].size,
-          "content_type" => info[:content_type] || 'application/octet-stream',
+          "content_type" => info[:content_type],
           "file_name"    => info[:name],
           "description"  => info[:description] || '',
           "login"        => @login,
@@ -72,7 +73,6 @@ module Net
             ['success_action_status', 201],
             ['key', upload_info['prefix'] + info[:name]],
             ['AWSAccessKeyId', upload_info['accesskeyid']],
-            ['Content-Type', info[:content_type] || 'application/octet-stream'],
             ['signature', upload_info['signature']],
             ['acl', upload_info['acl']],
             ['file', f]
@@ -85,7 +85,6 @@ module Net
             ['success_action_status', 201],
             ['key', upload_info['prefix'] + info[:name]],
             ['AWSAccessKeyId', upload_info['accesskeyid']],
-            ['Content-Type', info[:content_type] || 'application/octet-stream'],
             ['signature', upload_info['signature']],
             ['acl', upload_info['acl']],
             ['file', StringIO.new(info[:data])]

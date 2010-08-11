@@ -75,12 +75,12 @@ end
 
 desc "gem install"
 task :install => [:package] do
-  sh "sudo gem install pkg/#{$name}-#{$version}.gem --local"
+  sh "gem install pkg/#{$name}-#{$version}.gem --local"
 end
 
 desc "gem uninstall"
 task :uninstall do
-  sh "sudo gem uninstall #{$name}"
+  sh "gem uninstall #{$name}"
 end
 
 # vim: syntax=ruby
