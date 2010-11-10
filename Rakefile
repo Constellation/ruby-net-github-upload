@@ -7,7 +7,7 @@ require 'rake/packagetask'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
 require 'rake/contrib/sshpublisher'
-require 'lib/net/github-upload'
+require './lib/net/github-upload'
 
 $version = Net::GitHub::Upload::VERSION
 $readme = 'README.rdoc'
@@ -51,6 +51,7 @@ spec = Gem::Specification.new do |s|
   s.test_files = Dir["test/*_test.rb"]
   s.add_dependency('nokogiri', '>=1.4.0')
   s.add_dependency('faster_xml_simple')
+  s.add_dependency('json')
   s.add_dependency('httpclient')
   s.files = %w(README.rdoc Rakefile) + Dir["{bin,test,lib}/**/*"]
 end

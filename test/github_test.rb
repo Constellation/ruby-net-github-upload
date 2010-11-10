@@ -1,5 +1,5 @@
 require 'test/unit'
-require File.dirname(__FILE__) + '/../lib/net/github-upload'
+require 'net/github-upload'
 
 class GitHubUploadTest < Test::Unit::TestCase
 	def setup
@@ -10,7 +10,8 @@ class GitHubUploadTest < Test::Unit::TestCase
 			:token => token
 		)
 		@repos = 'ruby-net-github-upload'
-	end
+    @gh.delete_all @repos
+  end
 
 	def test_file_upload
 		direct_link = nil
@@ -18,6 +19,7 @@ class GitHubUploadTest < Test::Unit::TestCase
 			direct_link = @gh.upload(
 				:repos => @repos,
 				:file  => 'test/test',
+				:content_type => 'text/plain',
 				:description => "test file"
 			)
 		}
@@ -28,6 +30,7 @@ class GitHubUploadTest < Test::Unit::TestCase
 			direct_link = @gh.replace(
 				:repos => @repos,
 				:file  => 'test/test',
+				:content_type => 'text/plain',
 				:description => "test file"
 			)
 		}

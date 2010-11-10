@@ -1,12 +1,14 @@
+require 'tempfile'
 require 'nokogiri'
 require 'httpclient'
 require 'stringio'
+require 'json'
 require 'faster_xml_simple'
 
 module Net
   module GitHub
     class Upload
-      VERSION = '0.0.4'
+      VERSION = '0.0.5'
       def initialize params=nil
         @login = params[:login]
         @token = params[:token]
@@ -40,18 +42,14 @@ module Net
         if info[:replace]
           list_files(info[:repos]).each { |obj|
             next unless obj[:name] == info[:name]
-            HTTPClient.post("http://github.com/#{info[:repos]}/downloads/#{obj[:id].gsub( "download_", '')}", {
-              "_method"      => "delete",
-              "login"        => @login,
-              "token"        => @token
-            })
+            delete info[:repos], obj[:id]
           }
         elsif list_files(info[:repos]).any?{|obj| obj[:name] == info[:name]}
           raise "file '#{info[:name]}' is already uploaded. please try different name"
         end
 
         info[:content_type] ||= 'application/octet-stream'
-        stat = HTTPClient.post("http://github.com/#{info[:repos]}/downloads", {
+        stat = HTTPClient.post("https://github.com/#{info[:repos]}/downloads", {
           "file_size"    => info[:file] ? File.stat(info[:file]).size : info[:data].size,
           "content_type" => info[:content_type],
           "file_name"    => info[:name],
@@ -64,32 +62,26 @@ module Net
           raise "Failed to post file info"
         end
 
-        upload_info = FasterXmlSimple.xml_in(stat.content)['hash']
+        upload_info = JSON.parse(stat.content)
         if info[:file]
           f = File.open(info[:file], 'rb')
-          stat = HTTPClient.post("http://github.s3.amazonaws.com/", [
-            ['Filename', info[:name]],
-            ['policy', upload_info['policy']],
-            ['success_action_status', 201],
-            ['key', upload_info['prefix'] + info[:name]],
-            ['AWSAccessKeyId', upload_info['accesskeyid']],
-            ['signature', upload_info['signature']],
-            ['acl', upload_info['acl']],
-            ['file', f]
-          ])
-          f.close
         else
-          stat = HTTPClient.post("http://github.s3.amazonaws.com/", [
-            ['Filename', info[:name]],
-            ['policy', upload_info['policy']],
-            ['success_action_status', 201],
-            ['key', upload_info['prefix'] + info[:name]],
-            ['AWSAccessKeyId', upload_info['accesskeyid']],
-            ['signature', upload_info['signature']],
-            ['acl', upload_info['acl']],
-            ['file', StringIO.new(info[:data])]
-          ])
+          f = Tempfile.open('net-github-upload')
+          f << info[:data]
+          f.flush
         end
+        stat = HTTPClient.post("http://github.s3.amazonaws.com/", [
+          ['Filename', info[:name]],
+          ['policy', upload_info['policy']],
+          ['success_action_status', 201],
+          ['key', upload_info['path']],
+          ['AWSAccessKeyId', upload_info['accesskeyid']],
+          ['Content-Type', upload_info['content_type'] || 'application/octet-stream'],
+          ['signature', upload_info['signature']],
+          ['acl', upload_info['acl']],
+          ['file', f]
+        ])
+        f.close
 
         if stat.code == 201
           return FasterXmlSimple.xml_in(stat.content)['PostResponse']['Location']
@@ -102,8 +94,17 @@ module Net
          upload info.merge( :replace => true )
       end
 
-      private
+      def delete_all repos
+        unless repos
+          raise "required repository name"
+        end
+        repos = @login + '/' + repos unless repos.include? '/'
+        list_files(repos).each { |obj|
+          delete repos, obj[:id]
+        }
+      end
 
+      private
 
       def extract_error_message(stat)
         # @see http://docs.amazonwebservices.com/AmazonS3/2006-03-01/ErrorResponses.html
@@ -113,21 +114,28 @@ module Net
         ''
       end
 
+      def delete repos, id
+        HTTPClient.post("https://github.com/#{repos}/downloads/#{id.gsub( "download_", '')}", {
+          "_method"      => "delete",
+          "login"        => @login,
+          "token"        => @token
+        })
+      end
 
       def list_files repos
         raise "required repository name" unless repos
-        res = HTTPClient.get_content("http://github.com/#{repos}/downloads", {
+        res = HTTPClient.get_content("https://github.com/#{repos}/downloads", {
           "login" => @login,
           "token" => @token
         })
-        Nokogiri::HTML(res).xpath('id("browser")/descendant::tr[contains(@id, "download")]').map do |fileinfo|
+        Nokogiri::HTML(res).xpath('id("manual_downloads")/li').map do |fileinfo|
           obj = {
-            :id          => fileinfo.attribute('id').text,
-            :description => fileinfo.at_xpath('descendant::td[3]').text,
-            :date        => fileinfo.at_xpath('descendant::td[4]').text,
-            :size        => fileinfo.at_xpath('descendant::td[5]').text
+            :description => fileinfo.at_xpath('descendant::h4').text,
+            :date        => fileinfo.at_xpath('descendant::p/abbr').attribute('title').text,
+            :size        => fileinfo.at_xpath('descendant::p/strong').text,
+            :id          => /\d+$/.match(fileinfo.at_xpath('a').attribute('href').text)[0]
           }
-          anchor = fileinfo.at_xpath('descendant::td[2]/a')
+          anchor = fileinfo.at_xpath('descendant::h4/a')
           obj[:link] = anchor.attribute('href').text
           obj[:name] = anchor.text
           obj
