@@ -130,10 +130,10 @@ module Net
         })
         Nokogiri::HTML(res).xpath('id("manual_downloads")/li').map do |fileinfo|
           obj = {
-            :description => fileinfo.at_xpath('descendant::h4').text,
-            :date        => fileinfo.at_xpath('descendant::p/time').children.text,
-            :size        => fileinfo.at_xpath('descendant::p/strong').text,
-            :id          => /\d+$/.match(fileinfo.at_xpath('a').attribute('href').text)[0]
+            description:  fileinfo.at_xpath('descendant::h4').text.force_encoding('BINARY').gsub(/.+?\xe2\x80\x94 (.+?)(\n\s*)?$/m, '\1'),
+            date:         fileinfo.at_xpath('descendant::p/time').attribute('title').text,
+            size:         fileinfo.at_xpath('descendant::p/strong').text,
+            id:           /\d+$/.match(fileinfo.at_xpath('a').attribute('href').text)[0]
           }
           anchor = fileinfo.at_xpath('descendant::h4/a')
           obj[:link] = anchor.attribute('href').text
