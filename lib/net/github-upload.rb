@@ -8,7 +8,7 @@ require 'faster_xml_simple'
 module Net
   module GitHub
     class Upload
-      VERSION = '0.0.6'
+      VERSION = '0.0.7'
       def initialize params=nil
         @login = params[:login]
         @token = params[:token]
