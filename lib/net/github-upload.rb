@@ -104,16 +104,6 @@ module Net
         }
       end
 
-      private
-
-      def extract_error_message(stat)
-        # @see http://docs.amazonwebservices.com/AmazonS3/2006-03-01/ErrorResponses.html
-        error = FasterXmlSimple.xml_in(stat.content)['Error']
-        " due to #{error['Code']} (#{error['Message']})"
-      rescue
-        ''
-      end
-
       def delete repos, id
         HTTPClient.post("https://github.com/#{repos}/downloads/#{id.gsub( "download_", '')}", {
           "_method"      => "delete",
@@ -140,6 +130,16 @@ module Net
           obj[:name] = anchor.text
           obj
         end
+      end
+
+      private
+
+      def extract_error_message(stat)
+        # @see http://docs.amazonwebservices.com/AmazonS3/2006-03-01/ErrorResponses.html
+        error = FasterXmlSimple.xml_in(stat.content)['Error']
+        " due to #{error['Code']} (#{error['Message']})"
+      rescue
+        ''
       end
     end
   end
