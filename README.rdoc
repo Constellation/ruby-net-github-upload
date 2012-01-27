@@ -28,7 +28,7 @@ respect to http://github.com/typester/net-github-upload-perl
     :repos => repos,
     :file  => 'test/test',
     :description => "test file",
-    :upload_timeout => 600, # Allow yourself time to upload larger files.
+    :upload_timeout => 600 # Allow yourself time to upload larger files.
   )
   # direct link is link to Amazon S3.
   # Because GitHub refrection for file changing is async,
@@ -42,7 +42,7 @@ respect to http://github.com/typester/net-github-upload-perl
     :data  => 'test',
     :name  => "test_#{time}.txt",
     :content_type => 'text/plain',
-    :description => "test file2",    
+    :description => "test file2"    
   )
   
   # replace file or data
@@ -57,7 +57,7 @@ respect to http://github.com/typester/net-github-upload-perl
     :data  => 'test',
     :name  => "test_#{time}.txt",
     :content_type => 'text/plain',
-    :description => "test file2",
+    :description => "test file2"
   )
   
   # Printing out progress (will yield to block once a second):
@@ -65,7 +65,7 @@ respect to http://github.com/typester/net-github-upload-perl
     :repos => repos,
     :file  => 'test/test',
     :description => "test file",
-    :upload_timeout => 600, # Allow yourself time to upload larger files.
+    :upload_timeout => 600 # Allow yourself time to upload larger files.
   ) do
     print "."
   end
