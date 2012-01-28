@@ -18,6 +18,20 @@ module Net
         end
       end
 
+      # Upload a file to github. Will fail if the file already exists.
+      # To upload, either supply :data and :name or :file.
+      #
+      # @param [Hash] info
+      # @option info [String] :content_type ('application/octet-stream') Type of data to send 
+      # @option info [String] :data Data to upload as a file. Requires that the :name option is set.
+      # @option info [String] :description ('') Description of file on Github download page.
+      # @option info [String] :file Path to file to upload.
+      # @option info [String] :name (filename of info[:file] if uploading a file) Name the file will have (not including path) when uploaded.
+      # @option info [Boolean] :replace (false) True to force overwriting of an existing file.
+      # @option info [String] :repos Name of Github project, such as "my_project", which is the repository.
+      # @option info [Float] :upload_timeout (120) Maximum time, in seconds, before abandoning a file upload.
+      # @option info [Float] :yield_interval (1) Interval, in seconds, between yields if block is given.     
+      # @yield [] Optional block will yield every info[:yield_interval] seconds (This can be used, for example, to print "#" every second so users see that the upload is continuing).
       def upload info
         unless info[:repos]
           raise "required repository name"
@@ -70,30 +84,47 @@ module Net
           f << info[:data]
           f.flush
         end
-        stat = HTTPClient.post("http://github.s3.amazonaws.com/", [
-          ['Filename', info[:name]],
-          ['policy', upload_info['policy']],
-          ['success_action_status', 201],
-          ['key', upload_info['path']],
-          ['AWSAccessKeyId', upload_info['accesskeyid']],
-          ['Content-Type', upload_info['content_type'] || 'application/octet-stream'],
-          ['signature', upload_info['signature']],
-          ['acl', upload_info['acl']],
-          ['file', f]
-        ])
-        f.close
+        client = HTTPClient.new
+        client.send_timeout = info[:upload_timeout] if info[:upload_timeout]
 
-        if stat.code == 201
-          return FasterXmlSimple.xml_in(stat.content)['PostResponse']['Location']
+        res = begin
+          connection = client.post_async("http://github.s3.amazonaws.com/", [
+              ['Filename', info[:name]],
+              ['policy', upload_info['policy']],
+              ['success_action_status', 201],
+              ['key', upload_info['path']],
+              ['AWSAccessKeyId', upload_info['accesskeyid']],
+              ['Content-Type', upload_info['content_type'] || 'application/octet-stream'],
+              ['signature', upload_info['signature']],
+              ['acl', upload_info['acl']],
+              ['file', f]
+          ])
+
+          until connection.finished?
+            yield if block_given?
+            sleep info[:yield_interval] || 1
+          end
+
+          connection.pop
+        ensure
+          f.close
+        end
+
+        if res.status == 201
+          return FasterXmlSimple.xml_in(res.body.read)['PostResponse']['Location']
         else
-          raise 'Failed to upload' + extract_error_message(stat)
+          raise 'Failed to upload' + extract_error_message(res.body)
         end
       end
 
-      def replace info
-         upload info.merge( :replace => true )
+      # Upload a file and replace it if it already exists on the server.
+      #
+      # @see #upload
+      def replace info = {}, &block
+         upload info.merge( :replace => true ), &block
       end
 
+      # Delete all uploaded files.
       def delete_all repos
         unless repos
           raise "required repository name"
@@ -104,6 +135,7 @@ module Net
         }
       end
 
+      # Delete an individual file (used by #replace when replacing existing files).
       def delete repos, id
         HTTPClient.post("https://github.com/#{repos}/downloads/#{id.gsub( "download_", '')}", {
           "_method"      => "delete",
@@ -112,6 +144,7 @@ module Net
         })
       end
 
+      # List all the files uploaded to a repository.
       def list_files repos
         raise "required repository name" unless repos
         res = HTTPClient.get_content("https://github.com/#{repos}/downloads", {
@@ -144,4 +177,3 @@ module Net
     end
   end
 end
-
