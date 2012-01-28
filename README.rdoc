@@ -1,7 +1,7 @@
 = Ruby Net::GitHub::Upload
 
 * http://github.com/Constellation/ruby-net-github-upload
-* http://gemcutter.org/gems/net-github-upload
+* http://rubygems.org/gems/net-github-upload
 
 == DESCRIPTION
 
@@ -82,6 +82,11 @@ respect to http://github.com/typester/net-github-upload-perl
 
   gem source -a http://gemcutter.org
   sudo gem install net-github-upload
+
+== DEVELOPERS
+
+id:Constellation
+id:Spooner
 
 == LICENSE
 
